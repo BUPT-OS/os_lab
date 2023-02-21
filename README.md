@@ -412,9 +412,9 @@ git config user.email "<邮箱>"
 找到你提交的commit范围
 
 ```bash
-git format-patch <from>..<to> –-stdout > example.patch
+git format-patch –-stdout <from>..<to>  > example.patch
 # 或者
-git format-patch -<向前n个commit> HEAD --stdout > example.patch
+git format-patch --stdout -<向前n个commit> HEAD  > example.patch
 # 只有一个commit就可以用
 git format-patch -1 HEAD --stdout > example.patch
 ```
