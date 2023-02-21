@@ -1,4 +1,3 @@
-// use crate::double_linked_list_example::{LinkedList, MergeSort};
 use crate::double_linked_list::{LinkedList, MergeSort};
 use rand::{distributions::Uniform, Rng};
 #[test]
@@ -115,6 +114,7 @@ pub fn test_rev_for_loop() {
 }
 #[test]
 pub fn test_get() {
+    // 测试get
     let mut list = LinkedList::new();
     for i in 0..1000 {
         list.push_back(i);
@@ -126,6 +126,7 @@ pub fn test_get() {
 
 #[test]
 pub fn test_insert() {
+    // 测试insert
     let mut list = LinkedList::new();
     list.push_front(0);
     list.push_back(20);
@@ -138,6 +139,7 @@ pub fn test_insert() {
 }
 #[test]
 pub fn test_remove() {
+    // 测试remove
     let mut list = LinkedList::new();
     for i in 0..1000 {
         list.push_back(i);
@@ -161,22 +163,7 @@ pub fn test_contains() {
 
 #[test]
 pub fn test_find_mut() {
-    // 原来有错的测试程序
-    // let mut list = LinkedList::new();
-    // let rand_pos: i64 = rand::thread_rng().gen_range(0..1000);
-    // // FIXME: 此处应该注意生成的input不能产生相同的随机数
-    // let range = Uniform::from(100..1000000);
-    // let input: Vec<i64> = rand::thread_rng().sample_iter(&range).take(1000).collect();
-    // list.extend(input.iter().cloned());
-    // for i in 0..1000 {
-    //     let v = input[((i + rand_pos) % 1000) as usize];
-    //     list.find_mut(|x| *x == v).map(|x| *x = i as i64);
-    // }
-    // let mut ans = 1000 - rand_pos;
-    // while let Some(x) = list.pop_front() {
-    //     assert_eq!(x, ans);
-    //     ans = (ans + 1) % 1000;
-    // }
+    // 测试find_mut
     use std::collections::HashSet;
     use rand::distributions::Uniform;
     use rand::Rng;
@@ -219,6 +206,7 @@ pub fn test_find_mut() {
 
 #[test]
 pub fn test_split() {
+    // 测试split
     {
         let mut list = LinkedList::new();
         for i in 0..1000 {
