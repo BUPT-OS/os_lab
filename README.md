@@ -399,11 +399,11 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 
 在行号处点击断点，按F5开始调试
 
-![gdb3](assets\vscode-gdb.png)
+![gdb3](assets/vscode-gdb.png)
 
 如果需要使用gdb命令，可以在下面`DEBUG CONSOLE`，输入-exec {gdb命令}执行
 
-![gdb3](assets\gdb-console.png)
+![gdb3](assets/gdb-console.png)
 
 ## lab内容: 在内核中打印自己的信息
 
