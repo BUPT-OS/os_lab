@@ -427,7 +427,7 @@ git format-patch -1 HEAD --stdout > example.patch
 因此可以用：
 
 ```
-git format-patch 5d87bc88d72d..a181054e61cda75 --stdout > example.patch
+git format-patch --stdout 5d87bc88d72d..a181054e61cda75  > example.patch
 ```
 
 ### 在平台上提交
