@@ -11,6 +11,11 @@
         - [docker安装及拉取代码](#docker%E5%AE%89%E8%A3%85%E5%8F%8A%E6%8B%89%E5%8F%96%E4%BB%A3%E7%A0%81)
         - [rros编译过程](#rros%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B)
     - [使用Qemu进行模拟同时使用gdb对进行Debug](#%E4%BD%BF%E7%94%A8qemu%E8%BF%9B%E8%A1%8C%E6%A8%A1%E6%8B%9F%E5%90%8C%E6%97%B6%E4%BD%BF%E7%94%A8gdb%E5%AF%B9%E8%BF%9B%E8%A1%8Cdebug)
+        - [编译等级](#%E7%BC%96%E8%AF%91%E7%AD%89%E7%BA%A7)
+        - [使用rust-gdb调试](#%E4%BD%BF%E7%94%A8rust-gdb%E8%B0%83%E8%AF%95)
+        - [使用vscode的调试](#%E4%BD%BF%E7%94%A8vscode%E7%9A%84%E8%B0%83%E8%AF%95)
+    - [lab内容: 在内核中打印自己的信息](#lab%E5%86%85%E5%AE%B9-%E5%9C%A8%E5%86%85%E6%A0%B8%E4%B8%AD%E6%89%93%E5%8D%B0%E8%87%AA%E5%B7%B1%E7%9A%84%E4%BF%A1%E6%81%AF)
+    - [提交](#%E6%8F%90%E4%BA%A4)
     - [引用](#%E5%BC%95%E7%94%A8)
 
 <!-- /TOC -->
@@ -399,6 +404,16 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 如果需要使用gdb命令，可以在下面`DEBUG CONSOLE`，输入-exec {gdb命令}执行
 
 ![gdb3](assets\gdb-console.png)
+
+## lab内容: 在内核中打印自己的信息
+
+为了验证大家成功运行并编译内核，需要在内核启动时打印一个特定的字符串加自己的学号，修改位于`kernel/rros/init.rs`中的第252行，打印的内容为`Hello world from rros! I'm 2020xxxxxx`，其中2020xxxxxx替换为自己的学号。如果你的实现正确，运行`qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 | grep "Hello world from rros! I'm 2022xxxxxx"`，就可以看到如下结果：
+
+![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230223143740.png)
+
+## 提交
+
+本次实验需要提交自己的代码相对于commit号为`ed16617d67a5a0cd91964c7decf428ac2c41486b`的patch，以及一个文档，文档里面最少记录两个截图：成功编译内核的截图，成功用qemu运行内核并且使用gdb调试的截图。
 
 ## 引用
 
