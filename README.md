@@ -295,13 +295,26 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 ```
 最后的两个标志 -s 表示启动gdb server，-S表示不要立刻执行指令，按`c`可以开始执行。
 
+**修改环境中的gr脚本为以下代码：**
+
+```bash
+gdb-multiarch \
+--tui vmlinux \
+-ex "target remote :1234" \
+-ex "set architecture aarch64" \
+-ex "set language rust" \
+-ex "set auto-load safe-path /"
+```
+
+然后运行此脚本
+
 ```bash
 . ./gr
 ```
 
 ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230118034722.png)
 
-如果没有`gr`在路径下面，也可以手动启动一个rust-gdb进程：
+~~如果没有`gr`在路径下面，也可以手动启动一个rust-gdb进程：~~下面的脚本由于docker环境中的rust-gdb不支持跨平台编译有问题，不能采用
 
 ```
 rust-gdb \
@@ -311,8 +324,6 @@ rust-gdb \
 -ex "set auto-load safe-path"
 -ex "set lang rust"
 ```
-
-
 
 > 如果不想debug，只想用qemu对操作系统进行模拟运行，那么只需要打开一个窗口，然后去掉`-s -S`这两个gdb相关的参数，运行下列命令即可
 > ```bash
