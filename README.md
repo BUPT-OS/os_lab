@@ -291,7 +291,7 @@ docker在windows/linux/mac上都可以直接安装，主要参考[官方的文�
 我们只需要同时打开两个命令行窗口，然后左边运行qemu的命令，右边运行gdb的命令，我们就可以完成对rros的debug工作。
 
 ```bash
-qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096  -drive if=none,format=qcow2,file=test.qcow2 -s -S
+qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 -s -S
 ```
 最后的两个标志 -s 表示启动gdb server，-S表示不要立刻执行指令，按`c`可以开始执行。
 
@@ -316,7 +316,7 @@ rust-gdb \
 
 > 如果不想debug，只想用qemu对操作系统进行模拟运行，那么只需要打开一个窗口，然后去掉`-s -S`这两个gdb相关的参数，运行下列命令即可
 > ```bash
-> qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096  -drive if=none,format=qcow2,file=test.qcow2
+> qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096
 > ```
 
 先在qemu所在窗口执行上述命令，然后在gdb窗口执行上述命令，就可以成功运行
@@ -356,7 +356,7 @@ gdb的具体指令和上学期bos lab中的相关指令一致，具体内容可�
 首先，同样还是在命令行启动调试的qemu：
 
 ```
-qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096  -drive if=none,format=qcow2,file=test.qcow2 -s -S
+qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 -s -S
 ```
 
 然后，在项目根目录的.vscode文件夹中，打开.vscode/launch.json(没有的话新建一个)，把下面的配置粘贴进去：
