@@ -175,17 +175,17 @@ docker在windows/linux/mac上都可以直接安装，主要参考[官方的文�
     ```bash
     lsmod | grep kvm
     ```
-    正确的输出如下:
+    正确的输出如下:  
     ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230118030849.png)
   - 对linux软件包安装地址进行换源
     ``` bash
     sudo add-apt-repository "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt-get update
     ```
+    如果换源不成功，出现GPG error，可以参考这个[教程](https://askubuntu.com/questions/13065/how-do-i-fix-the-gpg-error-no-pubkey)。
   - 安装docker
     ```bash
     sudo apt-get install docker-ce
-    sudo docker run hello-world
     ```
   - docker换源
     ```bash
@@ -197,9 +197,9 @@ docker在windows/linux/mac上都可以直接安装，主要参考[官方的文�
     ```
   - 检查是否可以正常执行
     ``` bash
-    sudo docker run hello-world
+    docker run hello-world
     ```
-    ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230118030247.png)
+    ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230310190412.png)
 
 安装完成后，打开命令行窗口，使用`docker pull l543306408/rros_lab`命令来拉取rros docker的镜像image。接着使用`docker run -itd --security-opt seccomp=unconfined --name rros_lab l543306408/rros_lab /bin/bash`来运行一个名为rros_lab的container。
 
@@ -223,6 +223,7 @@ docker在windows/linux/mac上都可以直接安装，主要参考[官方的文�
 >   ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230118033325.png)
 > - 最后打开配置好的远端服务器，之后和在本地vscode打开docker容器的步骤一致
 > ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230118033629.png)
+> 如果发现打开插件后没有找到容器信息，有可能是因为所用账户没有docker的权限，在/etc/group中找到docker的用户组，添加自己的用户名。
 
 ### rros编译过程
 
