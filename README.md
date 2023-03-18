@@ -309,7 +309,9 @@ gdb-multiarch \
 -ex "set auto-load safe-path /"
 ```
 
-然后运行此脚本
+> 这是由于目前docker环境中的rust-gdb不支持交叉平台编译。
+
+然后运行此脚本（注意中间有空格）
 
 ```bash
 . ./gr
@@ -317,7 +319,7 @@ gdb-multiarch \
 
 ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230118034722.png)
 
-~~如果没有`gr`在路径下面，也可以手动启动一个rust-gdb进程：~~下面的脚本由于docker环境中的rust-gdb不支持跨平台编译有问题，不能采用
+<!-- ~~如果没有`gr`在路径下面，也可以手动启动一个rust-gdb进程：~~下面的脚本由于docker环境中的rust-gdb不支持跨平台编译有问题，不能采用
 
 ```
 rust-gdb \
@@ -326,7 +328,7 @@ rust-gdb \
 -ex "set architecture aarch64"
 -ex "set auto-load safe-path"
 -ex "set lang rust"
-```
+``` -->
 
 > 如果不想debug，只想用qemu对操作系统进行模拟运行，那么只需要打开一个窗口，然后去掉`-s -S`这两个gdb相关的参数，运行下列命令即可
 > ```bash
@@ -397,8 +399,8 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
                 "engineLogging": false
             },
             "MIMode": "gdb",
-            "miDebuggerPath" : "/root/.cargo/bin/rust-gdb",
-            // "miDebuggerPath":"/usr/bin/gdb-multiarch",
+            // "miDebuggerPath" : "/root/.cargo/bin/rust-gdb",
+            "miDebuggerPath":"/usr/bin/gdb-multiarch",
             "setupCommands": [
                 {
                     "description": "set language rust",
