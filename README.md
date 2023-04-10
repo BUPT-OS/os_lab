@@ -3,7 +3,23 @@
 ## Intro
 
 在这个实验中，你将阅读和实现两个比较有特点的实时内存分配器的代码，并学习到一些linux的相关知识。
+## 分数
+你只需要完成TLSF部分即可。其测试的分值如下：
+| 项目      | 分值 |
+| ------------------------- | -- |
+| `test_c_style_list`       | 5  |
+| `test_blockHeader_split`  | 10 |
+| `test_blockHeader_absorb` | 10 |
+| `test_mapping_insert`     | 5  |
+| `test_init`               | 5  |
+| `test_malloc`             | 15 |
+| `test_free`               | 15 |
+| `test_multiple_alloc`     | 10 |
+| `test_torture`            | 5  |
+| `tlsf_allocator`          | 5  |
+| 报告                    | 15 |
 
+而rros mem作为bonus，感兴趣的同学也可以做一下。
 ## 提交方法
 
 生成git patch，提交到指定位置。
