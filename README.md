@@ -1,7 +1,5 @@
 # OS Lab 4  实时内存分配器
-(
-  我们移除了之前Lab4的patch，因为要修改一些内容，新的patch会在近期发布
-)
+文档还在持续完善中...
 ## Intro
 
 在这个实验中，你将阅读和实现两个比较有特点的实时内存分配器的代码，并学习到一些linux的相关知识。
@@ -12,15 +10,46 @@
 
 ## 环境搭建
 
-现在用的是之前版本的容器，你需要服务器在容器之前lab的位置更新一下代码(git pull)。
+你可以直接在lab2环境（docker pull l543306408/rros_lab）上面进行开发。 使用`docker run -itd  --name rros_lab l543306408/rros_lab /bin/bash`进入bash环境。
 
-然后，把压缩包里的.config文件覆盖到项目根目录下，编译运行即可。
+然后你需要将`extract_error.py`和`lab4.patch`拷进docker。你可以做一个简单的映射，也可以使用`docker cp`。我们推荐使用映射，因为后面还需要导出patch。
+> 你可以通过`-v`命令创建一个docker到本地的路径映射。例如，我在桌面新建了一个文件夹叫做lab4。**在这个文件夹**里打开powershell，输入：
+```
+docker run -itd -v  $PWD/:/data/bupt-rtos/external --name rros_lab l543306408/rros_lab /bin/bash
+```
+> 这样，你在这个文件夹里的文件就可以在docker的/data/external目录下看到了。    
+
+你也可以通过`docker cp lab4.patch <docker id>:/data/bupt-rtos/lab4.patch`的方式拷贝进去。
 
 
+将两个文件放到rros文件夹下的根目录，并切换到该目录，输入：
+```
+git apply lab4.patch
+```
+就能打上patch了。
 
+![apply](assets/apply.png)
 
+### 编译和运行
+你可以使用下面的命令编译：
+```
+make LLVM=1 -j12 &> compile.txt && echo "compile successfully" || python3 extract_error.py
+```
+如果编译成功，会输出compile successfully。
+这里,-j12表示启动212线程，你需要根据你的主机线程数进行调整。你也可以直接设置成-j12。  
 
+否则，会打印出错误。
+![apply](assets/compile_error.png)
 
+你也可以自己调整一下extract_error脚本
+
+使用下面的命令运行：
+```
+qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 
+```
+使用ctrl+alt+a关闭qemu 
+
+注意，你的每次修改都需要先进行编译才会生效
 
 ## 相关知识
 
@@ -155,7 +184,7 @@ $$
 
 在这一部分，你需要实现一个TLSF分配器，并通过相应测试。
 
-你不需要独立完成全部代码，我们已经提供了BlockHeader的部分代码和一个简单的框架。你需要完成的代码主要在`rust/kernel/tlsf.rs`，测试的代码在`kernel/rros/lab_mem_test.rs`。
+你不需要独立完成全部代码，我们已经提供了BlockHeader的部分代码和一个简单的框架。你需要完成的代码主要在`kernel/rros/tlsf.rs`，测试的代码在`kernel/rros/lab_mem_test/tlsf_test.rs`。你可以通过注释掉部分代码选择性的执行测试
 
 为了减小实现的难度，你可以使用你在Lab1里面实现的链表来管理空闲内存，而不是直接使用双向指针。下面给出了一个示例的结构体定义：
 
@@ -188,22 +217,35 @@ pub fn init_on_heap(tmp : Box<TLSFControl<'a>,Global>) -> Box<Self,Global>{
 }
 ```
 
+#### Linux链表的例子
 
+TODO:
 
-#### 实现blockHeader
+当你的代码正确的时候，你能通过测试`test_c_style_list`。
+
+#### 实现BlockHeader的split和absorb
 
 我们已经实现了一个简单的BlockHeader，即管理内存块的结构体，并提供了一些可能会用到的方法；你也可以重写一个BlockHeader，但是它内存中的保存方式要和下图相同（size可以不用是8字节的，4字节的u32也可以。剩下4字节放标志位）
 
 ![used_block](assets/block.jpg)
 
-如果你直接使用我们所给的BlockHeader，你还需要自己实现`split`和`link_next`两个函数。
+如果你直接使用我们所给的BlockHeader，你还需要自己实现`split`和`absorb`两个函数。
 
-* `BlockHeader::split`： 将一个块分为两个块，前一个块的大小为size，后一个块大小为`self.size-size-BLOCK_HEADER_OVERHEAD`。如果无法分割，返回None
-* `BlockHeader::link_next`： 找到下一个块，然后把下一个块的`prev_phys_block`指针指向当前块的地址。
-  * 获取当前块的地址可以这样写：`unsafe{next.prev_phys_block = self as *const _ as *mut BlockHeader;}`
-  * 下一个块的地址为`当前块地址+size-BLOCK_HEADER_OVERHEAD`
+* `BlockHeader::split`： 将一个块分为两个块，前一个块的大小为size，后一个块大小为`self.size-size-BLOCK_HEADER_OVERHEAD`，返回后一个块。如果无法分割，返回None
+* `BlockHeader::absorb`： 找到下一个块，然后把下一个块合并到当前块上。
 
-当你的代码正确的时候，你应该能通过` kernel/rros/lab_mem_test.rs`中的测试`test_blockHeader`。
+当你的代码正确的时候，你能通过测试`tlsf blockHeader(split)`和`tlsf blockHeader(absorb)`。
+
+#### mapping
+
+实现一个mapping函数，将size映射为对应的f和s。完善
+
+* `mapping_insert` 将size映射到fl和sl函数。
+
+
+后面你会用到mapping函数。一共有两个mapping函数，`mapping_insert`和`mapping_search`（已实现）。`mapping_insert`在插入空闲块时使用，`mapping_search`用于分配内存时获取比给定size稍大的块。
+
+当你的代码正确的时候，你能通过测试`test_mapping_insert`
 
 #### 堆的初始化
 
@@ -211,24 +253,16 @@ pub fn init_on_heap(tmp : Box<TLSFControl<'a>,Global>) -> Box<Self,Global>{
 
 * `TLSFControl::init_on_heap`： 初始化控制块
 * `TLSFControl::add_pool` : 将一个内存地址加入管理
+* `init_block` : 初始化一个内存，并添加哨兵块（无测试）
 
-两个函数。这一部分只需要按照上面所述实现即可.
+你可能还需要一个辅助函数`insert_block`
 
-当你的代码正确的时候，你应该能通过` kernel/rros/lab_mem_test.rs`中的测试`test_init`。
+当你的代码正确的时候，你应该能通过测试`test_init`。
 
-#### mapping
-
-实现一个mapping函数，将size映射为对应的f和s。完善
-
-* `mapping_insert` 将size映射到fl和sl
-
-函数。
-
-后面你会用到mapping函数。一共有两个mapping函数，`mapping_insert`和`mapping_search`（已实现）。`mapping_insert`在插入空闲块时使用，`mapping_search`用于分配内存时获取比给定size稍大的块。
 
 #### malloc
 
-下面实现一个malloc的接口。这是malloc的伪代码：
+下面实现一个malloc的接口。你可以参考下面的伪代码：
 
 ```
 void* malloc(self,size){
@@ -246,7 +280,7 @@ void* malloc(self,size){
 
 完善`TLSFControl::malloc`函数。你可能需要花较多时间在`block_locate_free`函数。
 
-当你的代码正确的时候，你应该能通过` kernel/rros/lab_mem_test.rs`中的测试`test_malloc`。
+当你的代码正确的时候，你应该能通过测试`test_malloc`。
 
 #### 内存释放
 最后实现一个free的接口。这是free的伪代码：
@@ -263,7 +297,7 @@ void free(self,ptr){
 
 完善`TLSFControl::free`函数。
 
-当你的代码正确的时候，你应该能通过` kernel/rros/lab_mem_test.rs`中的测试`test_free`和`test_multiple_alloc`。
+当你的代码正确的时候，你应该能通过` kernel/rros/lab_mem_test.rs`中的测试`test_free`和`test_multiple_alloc`,`test_torture`。
 
 #### rust的alloc_api
 
