@@ -1,7 +1,7 @@
 From 07102682da8eac4382f45d124aa629a9cffc6da6 Mon Sep 17 00:00:00 2001
 From: Qiu Qichen <cheemsFries@gmail.com>
 Date: Wed, 14 Dec 2022 07:16:16 +0800
-Subject: [PATCH] lab4
+Subject: [PATCH 1/2] lab4
 
 ---
  .gitignore                                |    1 +
@@ -10041,6 +10041,34 @@ index cd738511a..d5144adc6 100644
  error_nums = 0
  mutex = threading.Lock()
  def handler():
+-- 
+2.34.1
+
+
+From e90e88b08864f7a4723d7c46a1f865571c03220e Mon Sep 17 00:00:00 2001
+From: Qiu Qichen <CheemsFries@gmail.com>
+Date: Tue, 11 Apr 2023 13:42:28 +0000
+Subject: [PATCH 2/2] remove `sched::`
+
+---
+ kernel/rros/thread.rs | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/rros/thread.rs b/kernel/rros/thread.rs
+index 0baf851b8..85eecb288 100644
+--- a/kernel/rros/thread.rs
++++ b/kernel/rros/thread.rs
+@@ -273,8 +273,8 @@ fn evl_wakeup_thread_locked(thread: Arc<SpinLock<rros_thread>>, mut mask: u32, i
+         // let mut oldstate = thread.lock();
+         thread.lock().state &= !mask;
+ 
+-
+-		if (mask & (sched::T_DELAY|sched::T_PEND)) != 0x0 {
++        
++		if (mask & ( T_DELAY| T_PEND)) != 0x0 {
+             let rtimer = thread.lock().rtimer.clone();
+             timer::rros_stop_timer(rtimer.unwrap());
+         }
 -- 
 2.34.1
 
