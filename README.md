@@ -1,8 +1,18 @@
 # OS Lab 4  实时内存分配器
-文档还在持续完善中...
-## Intro
+文档还在持续完善中...   
+**DDL: 2023.5.12 24:00**
+## 目录
+1. [分数](#分数)：评分的标准
+2. [环境搭建](#环境搭建)： 配置本次实验的环境
+2. [相关知识](#相关知识)：介绍一些关于内存分配器的知识
+3. [Linux中的链表](#Linux中的链表)： 介绍一下Linux中嵌入式(`intrusive`)的链表
+4. [TLSF](#tlsftwo-level-segregated-fit-实时内存分配算法): 一种实时内存分配算法的介绍。
+5. [测试和对应函数](#任务)：关于TLSF的测试
+6. [EVL Memeory allocator](#EVL中的实时内存分配算法)：一个更加复杂的实时内存分配器的介绍
+7. [如何配置调试](#调试)
 
-在这个实验中，你将阅读和实现两个比较有特点的实时内存分配器的代码，并学习到一些linux的相关知识。
+
+
 ## 分数
 你只需要完成TLSF部分即可。其测试的分值如下：
 | 项目      | 分值 |
@@ -17,12 +27,17 @@
 | `test_multiple_alloc`     | 10 |
 | `test_torture`            | 5  |
 | `tlsf_allocator`          | 5  |
-| 报告                    | 15 |
+| 报告                      | 15 |
+|                           |  |
+| 合计                      | 100 |
 
 而rros mem作为bonus，感兴趣的同学也可以做一下。
-## 提交方法
 
-生成git patch，提交到指定位置。
+由于内核中的内存错误会直接导致内核panic，因此我们建议你先将未完成的测试注释掉再进行编译。
+
+### 提交方法
+
+生成git patch，提交到http://10.109.246.160:8765
 
 ## 环境搭建
 
@@ -31,11 +46,11 @@
 然后你需要将`extract_error.py`和`lab4.patch`拷进docker。你可以做一个简单的映射，也可以使用`docker cp`。我们推荐使用映射，因为后面还需要导出patch。
 > 你可以通过`-v`命令创建一个docker到本地的路径映射。例如，我在桌面新建了一个文件夹叫做lab4。**在这个文件夹**里打开powershell，输入：
 ```
-docker run -itd -v  $PWD/:/data/bupt-rtos/external --name rros_lab l543306408/rros_lab /bin/bash
+docker run -itd -v  $PWD/:/data/bupt-rtos/share --name rros_lab l543306408/rros_lab /bin/bash
 ```
-> 这样，你在这个文件夹里的文件就可以在docker的/data/external目录下看到了。    
+> 这样，你在这个文件夹里的文件就可以在docker的/data/bupt-rtos/share目录下看到了。    
 
-你也可以通过`docker cp lab4.patch <docker id>:/data/bupt-rtos/lab4.patch`的方式拷贝进去。
+你也可以通过`docker cp lab4.patch <docker id>:/data/bupt-rtos/rros/lab4.patch`的方式拷贝进去。
 
 
 将两个文件放到rros文件夹下的根目录，并切换到该目录，输入：
@@ -46,24 +61,30 @@ git apply lab4.patch
 
 ![apply](assets/apply.png)
 
+我们还提供了一个解析编译输出的脚本`extract_error.py`，同样需要移动到rros根目录下
+
 ### 编译和运行
 你可以使用下面的命令编译：
 ```
 make LLVM=1 -j12 &> compile.txt && echo "compile successfully" || python3 extract_error.py
 ```
 如果编译成功，会输出compile successfully。
-这里,-j12表示启动212线程，你需要根据你的主机线程数进行调整。你也可以直接设置成-j12。  
+这里,-j12表示启动12个线程，你需要根据你的主机线程数进行调整。你也可以直接设置成-j12。  
 
 否则，会打印出错误。
 ![apply](assets/compile_error.png)
 
-你也可以自己调整一下extract_error脚本
+* 如果你修改过.config/menuconfig，或者发现编译了很久都没有结束，可以使用`make LLVM=1`查看是否有新的编译选项。若有的话，回车选择默认选项即可。
+
+* 你也可以自己调整一下extract_error脚本以截取更好的错误信息。
+
 
 使用下面的命令运行：
 ```
 qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 
 ```
-使用ctrl+alt+a关闭qemu 
+
+使用ctrl+a+x关闭qemu 
 
 注意，你的每次修改都需要先进行编译才会生效
 
@@ -94,6 +115,90 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 * **针对小对象的优化**
 
   对于大多数系统，分配小对象的次数会远多于大对象。因此一些分配器会特殊处理小对象的分配。一些常见的组合有：对小对象使用快速分配算法，对大对象使用节省空间的技巧；对小对象使用lookup table，对大对象使用比较复杂的计算（时间换空间）。
+
+## Linux中的链表
+
+相比普遍的链表实现方式，Linux内核中的链表的实现可谓独树一帜。Linux中的链表是将链表节点放到数据结构中，而不是把数据结构放到链表中。
+
+比如说，我们有一个block结构体。通过在里面加上`list_head`字段的形式使其可以被加入链表。
+
+```c
+struct list_head{
+  struct list_head *next;
+  struct list_head *prev;
+};
+struct block{
+  unsigned long id;
+  struct list_head list;
+};
+```
+然后使用下面的代码就能把一个节点加到链表里。
+```c
+LIST_HEAD(head);
+struct block *b1 = kmalloc(sizeof(struct block),GFP_KERNEL);
+b1->id = 0;
+INIT_LIST_HEAD(&b1->list);
+
+list_add(&b1->list, &head);
+```
+基于`container_of`宏，linux实现了很多`xxx_list_entry`的宏。这个宏可以将`list_head`转化为其结构体的指针。例如：
+```c
+struct block *b1 = kmalloc(sizeof(struct block),GFP_KERNEL);
+struct block *b2 = list_entry(&b1->list,struct block,list);
+```
+通常在遍历的时候会用到这些宏。
+
+> container_of 是一个 Linux 内核中的宏定义，用于在数据结构中通过指向其中某个成员的指针，找到该结构体的起始地址。  
+> 通常，container_of 宏定义有三个参数：ptr、type 和 member，其中 ptr 是指向结构体中某个成员的指针，type 是结构体的类型，member 是结构体中成员的名称。   
+> container_of 宏定义的作用是通过在结构体中成员的指针偏移量来找到结构体的起始地址。这通常是在内核代码中使用的，因为在内核中，经常需要通过指向结构体中某个成员的指针来获取整个结构体的信息
+
+Linux kernel链表的这种设计有许多优点。比如：
+* 可以在此基础上实现C的多态，一个链表上可以有不同类型的结构体。
+* 只需要获取到结构体，就可以O(1)的将其从链表上删除
+* 同一个结构体，可以放置多个链表节点。例如结构体A同时在链表1，2上面。你可以在链表1上面找到结构体A，使用list_entry找到结构体在链表2上面的位置。在某些场景这可能很有用。
+
+如果你对linux链表感兴趣，可以阅读include/linux/list.h中的宏和函数。
+
+尽管Linux kernel中链表很巧妙，但是同样可能有一些内存问题，尤其是将链表节点放到栈上面的时候。Rust for Linux根据[intrusive_collections](https://docs.rs/intrusive-collections/latest/intrusive_collections/)和内核使用场景封装了一个`RawList`。我们在此基础上面做了一些修改,并放到了`kernel/rros/tlsf_raw_list.rs::RawList`中。
+
+在后面的实验中，你需要使用链表维护空闲块。你可以用这种风格的链表(`kernel/rros/tlsf_raw_list.rs::RawList`),也可以使用你在lab1中写好的链表（需要进行[一些修改](#tips)）。
+### 如何使用`RawList`
+使用`RawList`要求结构体实现`GetLinks` trait
+```rust
+pub trait GetLinks {
+    /// The type of the entries in the list.
+    type EntryType: ?Sized;
+
+    /// Returns the links to be used when linking an entry within a list.
+    fn get_links(data: &Self::EntryType) -> &Links<Self::EntryType>;
+}
+```
+然后，在结构体中添加Links<T\>即可。
+比如，下面有一个简单的结构体A：
+```rust
+pub struct Block{
+    data : u32,
+    links : Links<Block>,
+}
+impl GetLinks for Block{
+    type EntryType = Block;
+    fn get_links(data:&Self::EntryType) -> &Links<Self::EntryType> {
+        &data.links
+    }
+}
+```
+我们已经为后面需要添加`Links`的结构体`FreeBlockHeader`实现了该trait，因此你可以直接使用。
+
+### Linux链表的例子
+我们这里准备了一个通过Rust Bindgen调用Linux链表函数的例子:`kernel/rros/tlsf.rs::list_example1_sort_decending_respectively`。
+
+你需要完成这个函数。这个函数比较ex1,ex2中val1和val2的大小，将数字大的放在前面，数字小的放在后面。比如ex1.val1 > ex2.val1,那么将链表`val_list1`先放入ex1，再放入ex2。`val_list2`也是同理   
+
+你可以通过`unsafe{rust_helper_list_add_tail()}`调用链表添加函数。
+
+当你的代码正确的时候，你能通过测试`test_c_style_list`。
+
+
 
 ## TLSF(Two-Level Segregated Fit) 实时内存分配算法
 
@@ -200,9 +305,11 @@ $$
 
 在这一部分，你需要实现一个TLSF分配器，并通过相应测试。
 
-你不需要独立完成全部代码，我们已经提供了BlockHeader的部分代码和一个简单的框架。你需要完成的代码主要在`kernel/rros/tlsf.rs`，测试的代码在`kernel/rros/lab_mem_test/tlsf_test.rs`。你可以通过注释掉部分代码选择性的执行测试
+你不需要独立完成全部代码，我们已经提供了BlockHeader的部分代码和一个简单的框架。你需要完成的代码主要在`kernel/rros/tlsf.rs`，测试的代码在`kernel/rros/lab_mem_test/tlsf_test.rs`。你可以通过注释掉部分代码选择性的执行测试。
 
-为了减小实现的难度，你可以使用你在Lab1里面实现的链表来管理空闲内存，而不是直接使用双向指针。下面给出了一个示例的结构体定义：
+你可以在必要的时候使用unsafe,但是过度地使用unsafe可能会让你花更多时间在调试上面。
+
+你可以使用你在Lab1里面实现的链表来管理空闲内存，而不是直接使用双向指针。下面给出了一个示例的结构体定义：
 
 ```rust
 const FL_INDEX_COUNT:usize = 25;
@@ -210,34 +317,46 @@ const SL_INDEX_COUNT:usize = 32;
 pub struct TLSFControl<'a> {
     fl_bitmap: usize,
     sl_bitmap: [usize; FL_INDEX_COUNT],
-    blocks: [[LinkedList<&'a mut BlockHeader>; SL_INDEX_COUNT]; FL_INDEX_COUNT],
+    blocks: [[LinkedList<FreeBlockHeaerPointer>; SL_INDEX_COUNT]; FL_INDEX_COUNT],
 }
 ```
 
 如果你不熟悉位运算，你也可以使用bool数组来替代bitmap。
 
-虽然上面的控制块只占用几KB的内存，但是linux内核栈一般也只有4KB或者8KB，如果把上面的控制块放在内核栈上面会导致内核栈溢出。因此我们要把控制块整体放到堆上。在框架代码中，我们使用了Rust的MaybeUninit。调用Box::try_new_uninit_in没有马上进行初始化，而是返回一个`Box<MaybeUninit<T>>`.然后我们直接对堆上的内存初始化。这样可以防止在初始化阶段就发生栈溢出。这里提供一个初始化的示例代码：
+虽然上面的控制块只占用几KB的内存，但是linux内核栈一般也只有4KB或者8KB，如果把上面的控制块放在内核栈上面会导致内核栈溢出。因此我们要把控制块整体放到堆上。在框架代码中，我们使用了Rust的MaybeUninit。调用Box::try_new_uninit_in没有马上进行初始化，而是返回一个`Box<MaybeUninit<T>>`.然后我们直接对堆上的内存初始化。这样可以防止在初始化阶段就发生栈溢出。
 
+#### BlockPointer
+为了方便实现，我们直接使用NonNull指针操作BlockHeader。
 ```rust
-pub fn init_on_heap(tmp : Box<TLSFControl<'a>,Global>) -> Box<Self,Global>{
-    // TODO: YOUR CODE HERE
-    for i in 0..FL_INDEX_COUNT {
-        for j in 0..SL_INDEX_COUNT {
-            tmp.blocks[i][j] = LinkedList::new();
+#[derive(Clone, Copy)]
+pub struct AutoDerefPointer<T>(NonNull<T>);
+
+impl<T> Deref for AutoDerefPointer<T>{
+    type Target = T;
+    fn deref(&self) -> &Self::Target{
+        unsafe{
+            self.0.as_ref()
         }
     }
-    tmp.fl_bitmap = 0;
-    tmp.sl_bitmap = [0; FL_INDEX_COUNT];
-    tmp
-    // END OF YOUR CODE
 }
+
+impl<T> DerefMut for AutoDerefPointer<T>{
+    fn deref_mut(&mut self) -> &mut Self::Target{
+        unsafe{
+            self.0.as_mut()
+        }
+    }
+}
+
+pub type BlockHeaderPointer = AutoDerefPointer<BlockHeader>;
+pub type FreeBlockHeaderPointer = AutoDerefPointer<FreeBlockHeader>;
 ```
 
-#### Linux链表的例子
+NonNull是对`*mut`的一个封装。使用时需要通过`unsafe{ptr.0.as_mut()}`来获得对该地址的引用。
+例如p是一个`BlockHeaderPointer`，那么不需要通过`unsafe{p.0.as_mut()}.get_size()`来获取大小，我们可以直接使用`p.get_size()`获取一个blockHeader的大小。`FreeBlockHeaderPointer`也是类似。
 
-TODO:
+我们通过`BlockHeaderPointer::from_raw_pointer()`来获取一个block的引用，这个函数会检查该地址是否包含magic number。如果这个block是一个没有初始化过的地址，你需要使用`unsafe BlockHeaderPointer::from_raw_pointer_unchecked`.
 
-当你的代码正确的时候，你能通过测试`test_c_style_list`。
 
 #### 实现BlockHeader的split和absorb
 
@@ -313,7 +432,7 @@ void free(self,ptr){
 
 完善`TLSFControl::free`函数。
 
-当你的代码正确的时候，你应该能通过` kernel/rros/lab_mem_test.rs`中的测试`test_free`和`test_multiple_alloc`,`test_torture`。
+当你的代码正确的时候，你应该能通过测试`test_free`和`test_multiple_alloc`,`test_torture`。
 
 #### rust的alloc_api
 
@@ -369,10 +488,7 @@ pub fn tlsf_allocator(){
 
 ![test fail](assets/failed.png)
 
-TIPS：
-
-> * 如果在内核环境下面开发和调试比较困难，也可以新建cargo项目并拷贝TLSF和测试的代码进行测试和调试。但是，你的实现应该没有第三方的依赖，因为rust for linux不支持cargo。（当然，如果你可以把依赖的代码复制到项目里进来，并且能通过内核的编译，也是可以的）
-> * 你可以使用你自己实现的链表来完成这个实验，也可以用kernel内实现好的一个链表(`rust/kernel/double_linked_list`)
+#### TIPS：
 > * 在使用堆分配内存时，和std环境下不同，你需要使用`use alloc::boxed::Box;`引入`Box`。由于rust for linux传入了`no_global_oom_handling`标志，因此不能使用`Box::new`,`Vec`等接口。你可以使用`Box::try_new_in<T,Global>.unwrap()`来替代(`use alloc::alloc::Global;`)。
 
 ## EVL中的实时内存分配算法
@@ -819,7 +935,7 @@ TLSF提到Rust 的allocator接口，这里接口和之前类似，但是实现�
 使用gdb的remote debug可以调试内核。首先在启动内核的命令后面加上`-s -S`（-s 表示启动gdb server，-S表示不要立刻执行指令，按`c`可以开始执行）。例如：
 
 ```bash
-qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd /data/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 -drive if=none,format=qcow2,file=test.qcow2-s -S
+qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 -s -S
 ```
 
 其中`arch/arm64/boot/Image`是内核的路径，`/data/rootfs.cpio.gz`是文件系统的路径
@@ -871,7 +987,7 @@ b kernel/rros/init.rs:159
 首先，同样还是在命令行启动调试的qemu：
 
 ```
-qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd /data/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096  -drive if=none,format=qcow2,file=test.qcow2 -s -S
+qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 -s -S
 ```
 
 其中`arch/arm64/boot/Image`是内核的路径，`/data/rootfs.cpio.gz`是文件系统的路径
@@ -921,7 +1037,3 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd /data/root
 如果需要使用gdb命令，可以在下面`DEBUG CONSOLE`，输入-exec {gdb命令}执行
 
 ![gdb3](assets/gdb-console.png)
-
-## Q&A
-
-这里可以写一些之前写代码，调试遇到的问题和解决方案。
