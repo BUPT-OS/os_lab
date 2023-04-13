@@ -4,6 +4,10 @@
 ## 更新日志
 2023-4-11 修复了一个编译错误，**重新更新**了lab4.patch
 
+2023-4-13 提供了一个新的.config文件，具体原因见[附录](#附录)
+
+
+
 
 ## 目录
 1. [分数](#分数)：评分的标准
@@ -14,7 +18,7 @@
 5. [测试和对应函数](#任务)：关于TLSF的测试
 6. [EVL Memeory allocator](#EVL中的实时内存分配算法)：一个更加复杂的实时内存分配器的介绍
 7. [如何配置调试](#调试)
-
+8. [附录](#附录)
 
 ## 分数
 你只需要完成TLSF部分即可。其测试的分值如下：
@@ -1040,3 +1044,22 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 如果需要使用gdb命令，可以在下面`DEBUG CONSOLE`，输入-exec {gdb命令}执行
 
 ![gdb3](assets/gdb-console.png)
+## 附录
+### kernel panic后无限重启
+这个feature在调试时比较有用，如果要关掉这个feature，可以按下面的步骤操作  
+
+1. `make menuconfig` 
+2. 选择`Rust Hacking`
+![appendix](assets/appendix-1-1.png)
+3.  选择`Debug Ops`
+![appendix](assets/appendix-1-2.png)
+4. 修改Panic timeout
+![appendix](assets/appendix-1-3.png)
+* 旁边的`panic on Oops`可以在非法访问内存时不panic，但是不建议开启
+5. 改成一个比较大的数字即可,例如100
+![appendix](assets/appendix-1-4.png)
+
+6. 保存配置
+![appendix](assets/appendix-1-5.png)
+7. 注意，下一次编译时需要配置一些选项，手动回车跳过即可。后面就可以用前面的命令直接编译了。
+![appendix](assets/appendix-1-6.png)
