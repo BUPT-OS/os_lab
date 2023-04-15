@@ -1046,7 +1046,15 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 ![gdb3](assets/gdb-console.png)
 ## 附录
 ### kernel panic后无限重启
-这个feature在调试时比较有用，如果要关掉这个feature，可以按下面的步骤操作  
+这个feature在调试时比较有用，如果要关掉这个feature，以下几种方法都可以：（选一种即可）
+#### 改qemu的选项
+只需要在qemu的运行选项后面加上`-no-reboot`选项即可。
+```bash
+qemu-system-aarch64 -no-reboot -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096
+```
+注意`kernel.panic=-1`。（如果你没改过就不用管了）
+
+#### 修改编译选项
 
 1. `make menuconfig` 
 2. 选择`Rust Hacking`
