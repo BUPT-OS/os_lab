@@ -48,7 +48,7 @@
 
 ## 环境搭建
 
-你可以直接在lab2环境（docker pull l543306408/rros_lab）上面进行开发。 使用`docker run -itd  --name rros_lab l543306408/rros_lab /bin/bash`进入bash环境。
+你可以直接在lab2环境（docker pull l543306408/rros_lab）上面进行开发。 使用`docker attach`进入bash环境。
 
 然后你需要将`extract_error.py`和`lab4.patch`拷进docker。你可以做一个简单的映射，也可以使用`docker cp`。我们推荐使用映射，因为后面还需要导出patch。
 > 你可以通过`-v`命令创建一个docker到本地的路径映射。例如，我在桌面新建了一个文件夹叫做lab4。**在这个文件夹**里打开powershell，输入：
@@ -67,6 +67,15 @@ git apply lab4.patch
 就能打上patch了。
 
 ![apply](assets/apply.png)
+
+打完patch后，commit一下当前的patch:
+```
+git add *
+git commit -m "base"
+```
+然后就可以开始做了。   
+
+> 上面这一步如果没做的话，提交时可能也能成功提交，但是patch文件会相对大一些。同时你的commit也会比较混乱，建议打上patch后再进行开发。
 
 我们还提供了一个解析编译输出的脚本`extract_error.py`，同样需要移动到rros根目录下
 
