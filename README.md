@@ -8,6 +8,7 @@
 
 2023-4-22 更新文档要求[报告内容](#报告的内容)
 
+2023-4-23 修复了lab测试的一些错误(见[test_fix.patch](./test_fix.patch))，与大多数同学有关的是`test_c_style_list`。这个patch可以在你当前的commit上直接覆盖，方法和lab4.patch一样。
 
 ## 目录
 1. [分数](#分数)：评分的标准

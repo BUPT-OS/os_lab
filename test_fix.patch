@@ -1,0 +1,331 @@
+From 8edc44ec459beb5d29007a7d0e647b2ce3fd33b1 Mon Sep 17 00:00:00 2001
+From: Qiu Qichen <CheemsFries@gmail.com>
+Date: Sat, 22 Apr 2023 16:17:42 +0000
+Subject: [PATCH] add missing "?" and fix some tests error
+
+---
+ kernel/rros/lab_mem_test/rros_mem_test.rs | 116 ++++++++++++----------
+ kernel/rros/lab_mem_test/tlsf_test.rs     |  18 ++--
+ 2 files changed, 71 insertions(+), 63 deletions(-)
+
+diff --git a/kernel/rros/lab_mem_test/rros_mem_test.rs b/kernel/rros/lab_mem_test/rros_mem_test.rs
+index e98f95148..1ff35735d 100644
+--- a/kernel/rros/lab_mem_test/rros_mem_test.rs
++++ b/kernel/rros/lab_mem_test/rros_mem_test.rs
+@@ -16,7 +16,7 @@ type Result<T> = core::result::Result<T, TestFailed>;
+ 
+ #[inline]
+ fn handle_alloc_ptr_result_default(test_name:&'static str, test_fn:fn(*mut c_types::c_void,usize) -> Result<()>){
+-    let size = mm::page_align(1024).unwrap();
++    let size = mm::page_align(65536).unwrap();
+     let ptr = vmalloc::c_vmalloc(size as c_types::c_ulong).unwrap();
+     let r = test_fn(ptr,size);
+     match r{
+@@ -223,7 +223,7 @@ pub fn test_search_right_mergeable(ptr:*mut c_types::c_void ,size:usize)->Result
+         let mut heap = get_uninit_heap(ptr,size);
+         let ptr = ptr as *mut evl_heap_range;
+         (*ptr).size += size;
+-        test!(heap.search_right_mergeable(ptr).is_none(),"test_search_right_mergeable failed 1");
++        test!(heap.search_right_mergeable(ptr).is_none(),"test_search_right_mergeable failed 1")?;
+         
+         // 第一片是4Page，第二片是2Page
+         let size1 = EVL_HEAP_PAGE_SIZE * 4;
+@@ -238,8 +238,8 @@ pub fn test_search_right_mergeable(ptr:*mut c_types::c_void ,size:usize)->Result
+         heap.insert_range_bysize(block2);
+         heap.insert_range_byaddr(block2);
+         let result = heap.search_right_mergeable(block1);
+-        test!(result.is_some(),"merge 1");
+-        test_eq!(result.unwrap(),block2,"merge 1 failed");
++        test!(result.is_some(),"merge 1")?;
++        test_eq!(result.unwrap(),block2,"merge 1 failed")?;
+ 
+         // 现在切成两片，但是不是邻近的。
+         clear_heap(&mut heap);
+@@ -255,7 +255,8 @@ pub fn test_search_right_mergeable(ptr:*mut c_types::c_void ,size:usize)->Result
+         heap.insert_range_byaddr(block1);
+         heap.insert_range_bysize(block2);
+         heap.insert_range_byaddr(block2);
+-        test!(result.is_none());
++        let result = heap.search_right_mergeable(block1);
++        test!(result.is_none())?;
+     }
+     Ok(())
+ }
+@@ -270,9 +271,9 @@ pub fn test_release_page_range(ptr:*mut c_types::c_void ,size:usize)->Result<()>
+         (*ptr).size = size;
+         heap.release_page_range(ptr as *mut u8,size); // call here
+         let addr_root = heap.addr_tree.as_ref().unwrap();
+-        test!(check_if_addr_in_tree(&addr_root.rb_node, ptr as u64));
++        test!(check_if_addr_in_tree(&addr_root.rb_node, ptr as u64))?;
+         let size_root = heap.size_tree.as_ref().unwrap();
+-        test!(check_if_size_in_tree(&size_root.rb_node, size as u64));
++        test!(check_if_size_in_tree(&size_root.rb_node, size as u64))?;
+ 
+         // left可合并
+         clear_heap(&mut heap);
+@@ -283,13 +284,13 @@ pub fn test_release_page_range(ptr:*mut c_types::c_void ,size:usize)->Result<()>
+         (*block2).size = size_array[1];
+         heap.release_page_range(block2 as *mut u8, (*block2).size); // call here
+         let addr_root = heap.addr_tree.as_ref().unwrap();
+-        test!(check_if_addr_in_tree(&addr_root.rb_node, ptr as u64));
+-        test!(!check_if_addr_in_tree(&addr_root.rb_node, block2 as u64));
++        test!(check_if_addr_in_tree(&addr_root.rb_node, ptr as u64))?;
++        test!(!check_if_addr_in_tree(&addr_root.rb_node, block2 as u64))?;
+ 
+         let size_root = heap.size_tree.as_ref().unwrap();
+-        test!(check_if_size_in_tree(&size_root.rb_node, (size_array[0] + size_array[1]) as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[0] as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[1] as u64));
++        test!(check_if_size_in_tree(&size_root.rb_node, (size_array[0] + size_array[1]) as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[0] as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[1] as u64))?;
+ 
+ 
+         // left，right都可以合并
+@@ -307,17 +308,17 @@ pub fn test_release_page_range(ptr:*mut c_types::c_void ,size:usize)->Result<()>
+ 
+         heap.release_page_range(block2 as *mut u8,size_array[1]); // call here
+         let addr_root = heap.addr_tree.as_ref().unwrap();
+-        test!(check_if_addr_in_tree(&addr_root.rb_node, block1 as u64));
+-        test!(!check_if_addr_in_tree(&addr_root.rb_node, block2 as u64));
+-        test!(!check_if_addr_in_tree(&addr_root.rb_node, block3 as u64));
++        test!(check_if_addr_in_tree(&addr_root.rb_node, block1 as u64))?;
++        test!(!check_if_addr_in_tree(&addr_root.rb_node, block2 as u64))?;
++        test!(!check_if_addr_in_tree(&addr_root.rb_node, block3 as u64))?;
+ 
+         let size_root = heap.size_tree.as_ref().unwrap();
+-        test!(check_if_size_in_tree(&size_root.rb_node, (size_array[0]+size_array[1]+size_array[2]) as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, (size_array[0]+size_array[1]) as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, (size_array[1]+size_array[2]) as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[0] as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[1] as u64));
+-        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[2] as u64));
++        test!(check_if_size_in_tree(&size_root.rb_node, (size_array[0]+size_array[1]+size_array[2]) as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, (size_array[0]+size_array[1]) as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, (size_array[1]+size_array[2]) as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[0] as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[1] as u64))?;
++        test!(!check_if_size_in_tree(&size_root.rb_node, size_array[2] as u64))?;
+     }
+     Ok(())
+ }
+@@ -338,30 +339,30 @@ pub fn test_search_size_ge(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+ 
+         // test equal
+         let result = heap.search_size_ge(block_array[0]);
+-        test!(result.is_some());
+-        test!((*result.unwrap()).size >= block_array[0]);
++        test!(result.is_some())?;
++        test!((*result.unwrap()).size >= block_array[0])?;
+ 
+         let result = heap.search_size_ge(block_array[1]);
+-        test!(result.is_some());
+-        test!((*result.unwrap()).size >= block_array[1]);
++        test!(result.is_some())?;
++        test!((*result.unwrap()).size >= block_array[1])?;
+         
+         let result = heap.search_size_ge(block_array[2]);
+-        test!(result.is_some());
+-        test!((*result.unwrap()).size >= block_array[2]);
++        test!(result.is_some())?;
++        test!((*result.unwrap()).size >= block_array[2])?;
+ 
+         let result = heap.search_size_ge(block_array[3]);
+-        test!(result.is_some());
+-        test!((*result.unwrap()).size >= block_array[3]);
++        test!(result.is_some())?;
++        test!((*result.unwrap()).size >= block_array[3])?;
+ 
+         let result = heap.search_size_ge(block_array[3]+10);
+-        test!(result.is_none());
++        test!(result.is_none())?;
+ 
+         // let result = heap.search_size_ge(4*EVL_HEAP_PAGE_SIZE);
+-        // test!(result.is_some());
++        // test!(result.is_some())?;
+         // test_but_allow_failing!((*result.unwrap()).size != 5*EVL_HEAP_PAGE_SIZE,"not best fit");
+ 
+         // let result = heap.search_size_ge(5*EVL_HEAP_PAGE_SIZE);
+-        // test!(result.is_some());
++        // test!(result.is_some())?;
+         // test_but_allow_failing!((*result.unwrap()).size != 5*EVL_HEAP_PAGE_SIZE,"not best fit");
+     }
+     Ok(())
+@@ -369,19 +370,19 @@ pub fn test_search_size_ge(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+ pub fn test_reserve_page_range(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+     unsafe{
+         let mut heap = get_evl_heap(ptr, size);
+-        test!(heap.is_ok());
++        test!(heap.is_ok())?;
+         let mut heap = heap.unwrap();
+         let alloc1 = EVL_HEAP_PAGE_SIZE * 2;
+         let a = heap.reserve_page_range(alloc1);
+-        test!(a.is_some());
++        test!(a.is_some())?;
+         let size_root = heap.size_tree.as_ref().unwrap();
+-        test!(check_if_size_in_tree(&size_root.rb_node, (size - alloc1) as u64));
++        test!(check_if_size_in_tree(&size_root.rb_node, (size - alloc1) as u64))?;
+         
+         let alloc2 = EVL_HEAP_PAGE_SIZE * 4;
+         let a = heap.reserve_page_range(alloc2);
+-        test!(a.is_some());
++        test!(a.is_some())?;
+         let size_root = heap.size_tree.as_ref().unwrap();
+-        test!(check_if_size_in_tree(&size_root.rb_node, (size - alloc1 -alloc2) as u64));
++        test!(check_if_size_in_tree(&size_root.rb_node, (size - alloc1 -alloc2) as u64))?;
+ 
+     }
+     Ok(())
+@@ -389,7 +390,7 @@ pub fn test_reserve_page_range(ptr:*mut c_types::c_void ,size:usize)->Result<()>
+ pub fn test_move_page_back(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+     unsafe{
+         let mut heap = get_evl_heap(ptr, size);
+-        test!(heap.is_ok());
++        test!(heap.is_ok())?;
+         let mut heap =heap.unwrap();
+         heap.add_page_front(16,4);
+         heap.add_page_front(17,4);
+@@ -411,7 +412,7 @@ pub fn test_move_page_back(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+             large_array[counter] = (*node).next;
+             node = heap.get_pagemap((*node).next as i32);
+         }
+-        test_eq!(large_array[counter],20);
++        test_eq!(large_array[counter-1],20)?;
+ 
+         // 19  -> 17 -> 16 -> 20 -> 18
+         heap.move_page_back(18, 4);
+@@ -426,7 +427,7 @@ pub fn test_move_page_back(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+             large_array[counter] = (*node).next;
+             node = heap.get_pagemap((*node).next as i32);
+         }
+-        test_eq!(large_array[counter],18);
++        test_eq!(large_array[counter-1],18)?;
+     }
+     Ok(())
+ }
+@@ -436,11 +437,11 @@ pub fn test_heap_alloc(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+         let mut heap = get_evl_heap(ptr,size).unwrap();
+         for i in 0..5{
+             let r = heap.evl_alloc_chunk(1000); // alloc 1024
+-            test!(r.is_some());
++            test!(r.is_some())?;
+         }
+         for i in 0..5{
+             let r = heap.evl_alloc_chunk(256); // alloc 1024
+-            test!(r.is_some());
++            test!(r.is_some())?;
+         }
+     }
+     unsafe{
+@@ -448,26 +449,33 @@ pub fn test_heap_alloc(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+         // test alloc big
+         for i in 0..64{
+             let r = heap.evl_alloc_chunk(1000); // alloc 1024
+-            test!(r.is_some());
++            test!(r.is_some())?;
+         }
+         let r = heap.evl_alloc_chunk(1000); // alloc 1024
+-        test!(r.is_none());
++        test!(r.is_none())?;
+     }
+     unsafe{
+         let mut heap = get_evl_heap(ptr, size).unwrap();
+-        for i in 0..64{
++        for i in 0..256{
+             let r = heap.evl_alloc_chunk(256); 
+-            test!(r.is_some());
++            test!(r.is_some())?;
+         }
+-        for i in 0..64{
++    }
++    unsafe{
++        let mut heap = get_evl_heap(ptr, size).unwrap();
++        for i in 0..512{
+             let r = heap.evl_alloc_chunk(128); 
+-            test!(r.is_some());
++            test!(r.is_some())?;
+         }
++    }
++    unsafe{
++        let mut heap = get_evl_heap(ptr, size).unwrap();
+         for i in 0..1024{
+             let r = heap.evl_alloc_chunk(64); 
+-            test!(r.is_some());
++            test!(r.is_some())?;
+         }
+     }
++    // TODO:懒得释放了，先这样吧
+     Ok(())
+ }
+ 
+@@ -480,12 +488,12 @@ pub fn test_heap_alloc_small(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+             let mut page = 0;
+             for i in 0..num{
+                 let r = heap.evl_alloc_chunk(small_block_size);
+-                test!(r.is_some());
++                test!(r.is_some())?;
+                 let r = unsafe{(r.unwrap() as usize - heap.membase as usize) >> 9};
+                 if i == 0{
+                     page = r;
+                 }else{
+-                    test_eq!(r,page);
++                    test_eq!(r,page)?;
+                 }
+             }
+         }
+@@ -503,7 +511,7 @@ pub fn test_heap_alloc_write_then_free(ptr:*mut c_types::c_void ,size:usize)->Re
+         for i in 0..block_sizes.len(){
+             let block_size = block_sizes[i];
+             let mut a = heap.evl_alloc_chunk(block_size);
+-            test!(a.is_some());
++            test!(a.is_some())?;
+             let mut a = a.unwrap();
+             ptrs[i] = a;
+             unsafe{
+@@ -539,12 +547,12 @@ pub fn test_heap_free(ptr:*mut c_types::c_void ,size:usize)->Result<()>{
+         for i in 0..10{
+             for j in 0..10{
+                 let p = heap.evl_alloc_chunk(alloc_small[j]);
+-                test!(p.is_some());
++                test!(p.is_some())?;
+                 alloc_small_ptrs[j] = p.unwrap();
+                 page[j] = (p.unwrap() as usize - heap.membase as usize) >> 9;
+             }
+             let p = heap.evl_alloc_chunk(alloc_big[i]);
+-            test!(p.is_some());
++            test!(p.is_some())?;
+             alloc_big_ptrs[i] = p.unwrap();
+ 
+             for j in 0..10{
+diff --git a/kernel/rros/lab_mem_test/tlsf_test.rs b/kernel/rros/lab_mem_test/tlsf_test.rs
+index 66425d3f4..d16768308 100644
+--- a/kernel/rros/lab_mem_test/tlsf_test.rs
++++ b/kernel/rros/lab_mem_test/tlsf_test.rs
+@@ -180,15 +180,15 @@ pub fn test_c_style_list() -> Result<()>{
+             list2 : bindings::list_head::default(),
+         };
+         list_example1_sort_decending_respectively(&mut l1, &mut l2, &mut ex1, &mut ex2);
+-        let mut next = list_entry!(&l1,Example,list1);
+-        test!(core::ptr::eq(&ex1 as *const Example,next));
+-        next = list_entry!(next,Example,list1);
+-        test!(core::ptr::eq(&ex2 as *const Example,next));
+-
+-        let mut next = list_entry!(&l2,Example,list2);
+-        test!(core::ptr::eq(&ex2 as *const Example,next));
+-        next = list_entry!(next,Example,list2);
+-        test!(core::ptr::eq(&ex1 as *const Example,next));
++        let mut next = list_entry!(l1.next,Example,list1);
++        test!(core::ptr::eq(&ex1 as *const Example,next))?;
++        next = list_entry!((*next).list1.next,Example,list1);
++        test!(core::ptr::eq(&ex2 as *const Example,next))?;
++
++        let mut next = list_entry!(l2.next,Example,list2);
++        test!(core::ptr::eq(&ex2 as *const Example,next))?;
++        next = list_entry!((*next).list2.next,Example,list2);
++        test!(core::ptr::eq(&ex1 as *const Example,next))?;
+     }
+ 
+     Ok(())
+-- 
+2.34.1
+
