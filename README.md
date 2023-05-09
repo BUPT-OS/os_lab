@@ -10,6 +10,8 @@
 
 2023-4-23 修复了lab测试的一些错误(见[test_fix.patch](./test_fix.patch))，与大多数同学有关的是`test_c_style_list`。这个patch可以在你当前的commit上直接覆盖，方法和lab4.patch一样。
 
+2023-5-9 panic如何找位置；添加一个对公式的说明。
+
 ## 目录
 1. [分数](#分数)：评分的标准
 2. [环境搭建](#环境搭建)： 配置本次实验的环境
@@ -249,6 +251,8 @@ TLSF将管理的空闲内存分为放在一个两维链表数组里，数组的�
 ![tlsf1](assets/tlsf2.png)
 
 其中f表示第一层，s表示第二层，SLI(second level index)表示第二层管理的比特数。第一层是按2的幂进行划分，也就是说，最高bit是第几位，第一层f就是多少。这样内存就被划分为了[2^4,2^5-1], [2^5,2^6-1]....。第二层进一步把每个区间分为2^{SLI}份（分成几份都可以，但是分为2^{SLI}份按位运算更好算）。一般SLI=4或者5。
+
+注意，在具体实现中，第一层的块不需要在去减掉2^f，因此可以先判断一下是否是第一层然后特别处理。例如，当对8字节对齐，SLI=5是，分配的内存块如果小于256，那么s=256*(块大小//32)
 
 例如，当SLI=4, size=460时
 $$
@@ -1090,3 +1094,24 @@ qemu-system-aarch64 -no-reboot -nographic  -kernel arch/arm64/boot/Image -initrd
 ![appendix](assets/appendix-1-5.png)
 7. 注意，下一次编译时需要配置一些选项，手动回车跳过即可。后面就可以用前面的命令直接编译了。
 ![appendix](assets/appendix-1-6.png)
+## Panic了怎么看在哪里报的错？
+这里提供一种方法帮助大家定位内存错误。
+
+当使用vscode调试运行时，panic时会停在报错的位置。
+
+也可以通过panic打印而信息来分析
+下面是Panic的一个例子
+![on_panic](assets/on_panic.jpg)
+这会打印出一些寄存器的值和Call trace。我们可以通过call trace来分析调用的顺序。
+
+然后，重新启动一次gdb，然后调试，在一个不会报错的位置断点一些，运行并等待断点触发。   
+
+在gdb控制台（或者vscode 的debug console) 输入：
+```
+info symbol <一个地址>
+或者在vscode中
+-exec info symbol <一个地址>
+```
+这时就能够打印出地址对应的符号位置了。
+![pos](assets/panic_pos.jpg)
+
