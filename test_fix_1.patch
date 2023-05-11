@@ -15,7 +15,6 @@ index 66425d3f4..d80c04af8 100644
          control.add_pool(ptr as  *mut u8, size);
          let ptr = ptr.offset(-(BLOCK_HEADER_OVERHEAD as isize));
  
--        // test begin
          let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
          test_eq!(len,2,"init failed: wrong len length")?;
          test_eq!(result[0].as_ref().unwrap().get_size(),size-2*BLOCK_HEADER_OVERHEAD,"init failed")?;
