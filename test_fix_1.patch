@@ -1,0 +1,87 @@
+From d8f924f63f72e11653b702c601e83ed544264dd5 Mon Sep 17 00:00:00 2001
+From: Li Hongyu <lihongyu1999@bupt.edu.cn>
+Date: Thu, 11 May 2023 05:34:10 +0000
+Subject: [PATCH] modify tlsf_test.rs test_malloc
+
+---
+ kernel/rros/lab_mem_test/tlsf_test.rs | 42 ++++++++++++++++++++++-----
+ 1 file changed, 35 insertions(+), 7 deletions(-)
+
+diff --git a/kernel/rros/lab_mem_test/tlsf_test.rs b/kernel/rros/lab_mem_test/tlsf_test.rs
+index 66425d3f4..d80c04af8 100644
+--- a/kernel/rros/lab_mem_test/tlsf_test.rs
++++ b/kernel/rros/lab_mem_test/tlsf_test.rs
+@@ -385,7 +385,6 @@ pub fn test_malloc()->Result<()>{
+         control.add_pool(ptr as  *mut u8, size);
+         let ptr = ptr.offset(-(BLOCK_HEADER_OVERHEAD as isize));
+ 
+         let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
+         test_eq!(len,2,"init failed: wrong len length")?;
+         test_eq!(result[0].as_ref().unwrap().get_size(),size-2*BLOCK_HEADER_OVERHEAD,"init failed")?;
+@@ -405,7 +404,6 @@ pub fn test_malloc()->Result<()>{
+         test_eq!(result[2].as_ref().unwrap().get_size(),0,"malloc 1 failed:missing sentinel")?;
+         write_buffer(user_ptr,256);
+ 
+-
+         // test malloc 2
+         let user_ptr = control.malloc::<u8>(256);
+         test!(!user_ptr.is_null())?;
+@@ -429,20 +427,50 @@ pub fn test_malloc()->Result<()>{
+         test_eq!(len,4,"malloc 3 failed: wrong length")?;
+ 
+         // test malloc 4
+-        let user_ptr = control.malloc::<u8>(472);
++        let user_ptr = control.malloc::<u8>(33);  //对齐到40
+         test!(!user_ptr.is_null())?;
+         let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
+-        test_eq!(len,4,"malloc 4 failed: wrong len length")?;
++        let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
++        test_eq!(len,5,"malloc 4 failed: wrong len length")?;
+         test_eq!(result[0].as_ref().unwrap().get_size(),256,"malloc 4 failed:size error")?;
+         test_eq!(result[0].as_ref().unwrap().is_free(),false,"malloc failed")?;
+         test_eq!(result[1].as_ref().unwrap().get_size(),256,"malloc 4 failed:remain size error")?;
+         test_eq!(result[1].as_ref().unwrap().is_free(),false,"malloc 4 failed:remain block prev free error")?;
+         test_eq!(result[1].as_ref().unwrap().is_prev_free(),false,"malloc 4 failed:remain block prev free error")?;
+-        test_eq!(result[2].as_ref().unwrap().get_size(),480,"malloc 4 failed:remain size error")?;
++        test_eq!(result[2].as_ref().unwrap().get_size(),40,"malloc 4 failed:remain size error")?;
+         test_eq!(result[2].as_ref().unwrap().is_free(),false,"malloc 4 failed:remain block prev free error")?;
+         test_eq!(result[2].as_ref().unwrap().is_prev_free(),false,"malloc 4 failed:remain block prev free error")?;
+-        test_eq!(result[3].as_ref().unwrap().get_size(),0,"malloc 2 failed:missing sentinel")?;
+-        write_buffer(user_ptr,472);
++        test_eq!(result[3].as_ref().unwrap().get_size(),432,"malloc 4 failed:remain size error")?;
++        test_eq!(result[3].as_ref().unwrap().is_free(),true,"malloc 4 failed:remain block prev free error")?;
++        test_eq!(result[3].as_ref().unwrap().is_prev_free(),false,"malloc 4 failed:remain block prev free error")?;
++        test_eq!(result[4].as_ref().unwrap().get_size(),0,"malloc 2 failed:missing sentinel")?;
++        write_buffer(user_ptr,33);
++
++        // test malloc 5
++        let user_ptr = control.malloc::<u8>(424);
++        test!(!user_ptr.is_null())?;
++        let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
++        let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
++        test_eq!(len,5,"malloc 4 failed: wrong len length")?;
++        test_eq!(result[0].as_ref().unwrap().get_size(),256,"malloc 5 failed:size error")?;
++        test_eq!(result[0].as_ref().unwrap().is_free(),false,"malloc failed")?;
++        test_eq!(result[1].as_ref().unwrap().get_size(),256,"malloc 5 failed:remain size error")?;
++        test_eq!(result[1].as_ref().unwrap().is_free(),false,"malloc 5 failed:remain block prev free error")?;
++        test_eq!(result[1].as_ref().unwrap().is_prev_free(),false,"malloc 5 failed:remain block prev free error")?;
++        test_eq!(result[2].as_ref().unwrap().get_size(),40,"malloc 5 failed:remain size error")?;
++        test_eq!(result[2].as_ref().unwrap().is_free(),false,"malloc 5 failed:remain block prev free error")?;
++        test_eq!(result[2].as_ref().unwrap().is_prev_free(),false,"malloc 5 failed:remain block prev free error")?;
++        test_eq!(result[3].as_ref().unwrap().get_size(),432,"malloc 5 failed:remain size error")?;
++        test_eq!(result[3].as_ref().unwrap().is_free(),false,"malloc 5 failed:remain block prev free error")?;
++        test_eq!(result[3].as_ref().unwrap().is_prev_free(),false,"malloc 5 failed:remain block prev free error")?;
++        test_eq!(result[4].as_ref().unwrap().get_size(),0,"malloc 2 failed:missing sentinel")?;
++        write_buffer(user_ptr,424);
++
++        // test malloc 6
++        let user_ptr = control.malloc::<u8>(8);
++        test!(user_ptr.is_null())?;
++        let (len,result) = get_block_vector(ptr as *mut MockBlockHeader);
++        test_eq!(len,4,"malloc 6 failed: wrong length")?;
+ 
+     }
+     // pr_info!("test_malloc ok");
+-- 
+2.34.1
+
