@@ -176,6 +176,6 @@ rros会通过更换底层`clock_event_device`中的相关函数，来劫持系�
 
 ## 引用
 
-[1] https://en.wikipedia.org/wiki/Real-time_operating_system
-[2] https://baike.baidu.com/item/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3LINUX%E5%86%85%E6%A0%B8%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89/9829376?fromtitle=%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3LINUX%E5%86%85%E6%A0%B8&fromid=6153389&fr=aladdin
+[1] https://en.wikipedia.org/wiki/Real-time_operating_system  
+[2] https://baike.baidu.com/item/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3LINUX%E5%86%85%E6%A0%B8%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89/9829376?fromtitle=%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3LINUX%E5%86%85%E6%A0%B8&fromid=6153389&fr=aladdin  
 [3] http://www.wowotech.net/timer_subsystem/time-subsyste-architecture.html
