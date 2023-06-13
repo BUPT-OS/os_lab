@@ -4384,20 +4384,6 @@ index baeeec936..e8238e6bf 100644
  fn test_sched() {
      // sched_test::test_this_rros_rq_thread();
      // sched_test::test_cpu_smp();
-@@ -246,7 +270,13 @@ fn test_sched() {
- fn test_fifo() {
-     fifo_test::test___rros_enqueue_fifo_thread();
- }
-+fn test_mem() {
-+    // memory_test::mem_test();
-+}
- 
-+fn test_lantency () {
-+    rros::latmus::test_latmus();
-+}
- impl KernelModule for Rros {
-     fn init() -> Result<Self> {
-         pr_info!("Hello world from rros!\n");
 @@ -260,11 +290,13 @@ impl KernelModule for Rros {
  
          let cpu_online_mask = unsafe { cpumask::read_cpu_online_mask() };

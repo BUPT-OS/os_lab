@@ -14,6 +14,7 @@
         - [rros的实时调度算法 一个基本的调度器设计](#rros%E7%9A%84%E5%AE%9E%E6%97%B6%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95-%E4%B8%80%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%9A%84%E8%B0%83%E5%BA%A6%E5%99%A8%E8%AE%BE%E8%AE%A1)
         - [rros的中断和时间子系统](#rros%E7%9A%84%E4%B8%AD%E6%96%AD%E5%92%8C%E6%97%B6%E9%97%B4%E5%AD%90%E7%B3%BB%E7%BB%9F)
         - [rros的实时调度算法 一个基本的调度器设计](#rros%E7%9A%84%E5%AE%9E%E6%97%B6%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95-%E4%B8%80%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%9A%84%E8%B0%83%E5%BA%A6%E5%99%A8%E8%AE%BE%E8%AE%A1)
+        - [lab测试方法](#lab%E6%B5%8B%E8%AF%95%E6%96%B9%E6%B3%95)
     - [引用](#%E5%BC%95%E7%94%A8)
 
 <!-- /TOC -->
@@ -38,7 +39,7 @@ git commit -m "lab3 base"
 
 此处的`lab2_commit`为你`git log`中为lab2提交学号的commit号，或者提交学号commit的前一个commit号。
 
-最后上传本项目中的`.config`文件到rros工程项目中，成功编译后就可以开始本次lab之旅了。
+**最后一定要将本项目中的`.config`文件放到rros工程项目中替换原有的`.config`文件**，本次实验的`.config`和之前的有所不同，成功编译后就可以开始本次lab之旅了。
 
 1. 说明lab的评分规则和Due
     - 各部分测试的分值如下：
@@ -144,7 +145,7 @@ rros在每一次调用`schedule`函数进行调度时，都需要从fifo的runna
 
 rros会通过更换底层`clock_event_device`中的相关函数，来劫持系统的tick。主要是两个函数：`rros_core_tick`是rros用来处理如果tick到来后应该怎么办的函数，而`proxy_set_next_ktime`是用来确定下一个tick什么时候响的函数。
 
-注意： 只有当你完成了接口1和2时，才能完成下一个任务，接口1和2没有单独的测试，如果你正常完成了代码，系统将不会打印"rust_kernel: init clock_proxy_device error!" and "rros: cpd new error!"错误。
+**注意： 只有当你完成了接口1和2时，才能完成下一个任务，接口1和2没有单独的测试，如果你正常完成了代码，系统将不会打印"rust_kernel: init clock_proxy_device error!" 和 "rros: cpd new error!"错误。**
 
 1. 接口1 截获系统中的tick: `rros_enable_tick`
 
@@ -175,6 +176,28 @@ rros会通过更换底层`clock_event_device`中的相关函数，来劫持系�
 // ##### 接口1
 
 // ##### 接口2 -->
+
+### lab测试方法
+
+当编写完函数后，可以在命令行中执行`qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 2048`来运行内核，测试编写的api代码是否通过。
+
+如果通过全部测试，将会有以下输出
+
+```bash
+[ 0.342510] rros: [RAND]Pass test fifo enqueue with the prority.
+[ 0.346441] rros: [RAND]Pass test lookup fifo class.
+[ 0.667724] rros: [RAND]Pass test handle clock tick.
+[ 0.691443] rros: [RAND]Pass test context switch between threads.
+```
+
+**注意`rros_enable_tick`和`setup_proxy`没有单独的测试接口，如果运行成功，将不会看到"rros: cpd new error!"和"rust_kernel: init clock_proxy_device error!"错误。**
+
+如果没有通过某一个测试，将会看到测试不成功的提示
+
+```bash
+[2.3608357] rros: Failed to pass fifo enqueuewth the nroritw
+[2.3698357] caused by: Test failed on kerne./rros/fifo test.rs:104:9
+```
 
 ## 引用
 

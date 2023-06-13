@@ -388,6 +388,7 @@ code {
 <li><a href="#rros%E7%9A%84%E5%AE%9E%E6%97%B6%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95-%E4%B8%80%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%9A%84%E8%B0%83%E5%BA%A6%E5%99%A8%E8%AE%BE%E8%AE%A1">rros的实时调度算法 一个基本的调度器设计</a></li>
 <li><a href="#rros%E7%9A%84%E4%B8%AD%E6%96%AD%E5%92%8C%E6%97%B6%E9%97%B4%E5%AD%90%E7%B3%BB%E7%BB%9F">rros的中断和时间子系统</a></li>
 <li><a href="#rros%E7%9A%84%E5%AE%9E%E6%97%B6%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95-%E4%B8%80%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%9A%84%E8%B0%83%E5%BA%A6%E5%99%A8%E8%AE%BE%E8%AE%A1">rros的实时调度算法 一个基本的调度器设计</a></li>
+<li><a href="#lab%E6%B5%8B%E8%AF%95%E6%96%B9%E6%B3%95">lab测试方法</a></li>
 </ul>
 </li>
 <li><a href="#%E5%BC%95%E7%94%A8">引用</a></li>
@@ -411,7 +412,7 @@ git add .
 git commit -m <span class="hljs-string">"lab3 base"</span>
 </div></code></pre>
 <p>此处的<code>lab2_commit</code>为你<code>git log</code>中为lab2提交学号的commit号，或者提交学号commit的前一个commit号。</p>
-<p>最后上传本项目中的<code>.config</code>文件到rros工程项目中，成功编译后就可以开始本次lab之旅了。</p>
+<p><strong>最后一定要将本项目中的<code>.config</code>文件放到rros工程项目中替换原有的<code>.config</code>文件</strong>，本次实验的<code>.config</code>和之前的有所不同，成功编译后就可以开始本次lab之旅了。</p>
 <ol>
 <li>说明lab的评分规则和Due
 <ul>
@@ -528,7 +529,7 @@ git commit -m <span class="hljs-string">"lab3 base"</span>
 </ol>
 <h3 id="rros%E7%9A%84%E4%B8%AD%E6%96%AD%E5%92%8C%E6%97%B6%E9%97%B4%E5%AD%90%E7%B3%BB%E7%BB%9F">rros的中断和时间子系统</h3>
 <p>rros会通过更换底层<code>clock_event_device</code>中的相关函数，来劫持系统的tick。主要是两个函数：<code>rros_core_tick</code>是rros用来处理如果tick到来后应该怎么办的函数，而<code>proxy_set_next_ktime</code>是用来确定下一个tick什么时候响的函数。</p>
-<p>注意： 只有当你完成了接口1和2时，才能完成下一个任务，接口1和2没有单独的测试，如果你正常完成了代码，系统将不会打印&quot;rust_kernel: init clock_proxy_device error!&quot; and &quot;rros: cpd new error!&quot;错误。</p>
+<p><strong>注意： 只有当你完成了接口1和2时，才能完成下一个任务，接口1和2没有单独的测试，如果你正常完成了代码，系统将不会打印&quot;rust_kernel: init clock_proxy_device error!&quot; 和 &quot;rros: cpd new error!&quot;错误。</strong></p>
 <ol>
 <li>接口1 截获系统中的tick: <code>rros_enable_tick</code></li>
 </ol>
@@ -557,6 +558,19 @@ git commit -m <span class="hljs-string">"lab3 base"</span>
 // ##### 接口1
 
 // ##### 接口2 -->
+<h3 id="lab%E6%B5%8B%E8%AF%95%E6%96%B9%E6%B3%95">lab测试方法</h3>
+<p>当编写完函数后，可以在命令行中执行<code>qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append &quot;rdinit=/linuxrc console=ttyAMA0&quot; -device virtio-scsi-device -smp 1 -m 2048</code>来运行内核，测试编写的api代码是否通过。</p>
+<p>如果通过全部测试，将会有以下输出</p>
+<pre class="hljs"><code><div>[ 0.342510] rros: [RAND]Pass <span class="hljs-built_in">test</span> fifo enqueue with the prority.
+[ 0.346441] rros: [RAND]Pass <span class="hljs-built_in">test</span> lookup fifo class.
+[ 0.667724] rros: [RAND]Pass <span class="hljs-built_in">test</span> handle clock tick.
+[ 0.691443] rros: [RAND]Pass <span class="hljs-built_in">test</span> context switch between threads.
+</div></code></pre>
+<p><strong>注意<code>rros_enable_tick</code>和<code>setup_proxy</code>没有单独的测试接口，如果运行成功，将不会看到&quot;rros: cpd new error!&quot;和&quot;rust_kernel: init clock_proxy_device error!&quot;错误。</strong></p>
+<p>如果没有通过某一个测试，将会看到测试不成功的提示</p>
+<pre class="hljs"><code><div>[2.3608357] rros: Failed to pass fifo enqueuewth the nroritw
+[2.3698357] caused by: Test failed on kerne./rros/fifo test.rs:104:9
+</div></code></pre>
 <h2 id="%E5%BC%95%E7%94%A8">引用</h2>
 <p>[1] https://en.wikipedia.org/wiki/Real-time_operating_system<br>
 [2] https://baike.baidu.com/item/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3LINUX%E5%86%85%E6%A0%B8%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89/9829376?fromtitle=%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3LINUX%E5%86%85%E6%A0%B8&amp;fromid=6153389&amp;fr=aladdin<br>
