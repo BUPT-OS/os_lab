@@ -15,7 +15,7 @@
 
 ## 考核第一部分：操作系统lab
 
-[操作系统lab](https://github.com/rust-real-time-os/os_lab)由四个部分组成，分别为rust，Linux操作系统编译与调试，实时内核的调度，实时内核内存分配。大家完成lab后，可以向我们的[测试平台](http://10.109.246.160:8765/login)提交patch，验证代码的正确性，测试平台的账号和初始密码均是大家在共享文档中的手机号，校外的同学可以通过[这个地址](http://21i73526z0.imdo.co:10354/index)访问评测网站。如果在做lab过程中遇到问题，可以在我们操作系统的[论坛](https://rros.zulipchat.com/join/37yh4bedyhh4cw5vrlujqlhh/)上讨论。如果可以发现内核或者Lab相关的bug或者可以改进的点，欢迎大家提出意见！
+[操作系统lab](https://github.com/rust-real-time-os/os_lab)由四个部分组成，分别为rust，Linux操作系统编译与调试，实时内核的调度，实时内核内存分配。大家完成lab后，可以向我们的[测试平台](http://10.109.246.160:8765/login)提交patch，验证代码的正确性，测试平台的账号和初始密码均是大家在共享文档中的手机号，校外的同学可以通过[这个地址](http://149.129.120.139:9300/login)访问评测网站。如果在做lab过程中遇到问题，可以在我们操作系统的[论坛](https://rros.zulipchat.com/join/37yh4bedyhh4cw5vrlujqlhh/)上讨论。如果可以发现内核或者Lab相关的bug或者可以改进的点，欢迎大家提出意见！
 
 1. track1的考核要求：根据以往参与考核人员的情况，争取在2-3周内完成所有的lab，并在测试平台上通过所有的测试，包括bonus任务；
 2. track2的考核要求：争取在6周内完成所有的lab，在测试平台上通过所有的测试，可以不完成bonus任务；
