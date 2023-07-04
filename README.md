@@ -2,17 +2,31 @@
 文档还在持续完善中...   
 **DDL: 2023.5.12 24:00**
 ## 更新日志
-2023-4-11 修复了一个编译错误，**重新更新**了lab4.patch
+2023-7-4 函数release_page_range的match right_op的None分支中，需要添加一个判断`if !addr_linked`，即：
+```
+  // ....
+  None => {
+      if !addr_linked {
+          self.insert_range_byaddr(freed);
+      }
+  },
+}
+self.insert_range_bysize(freed);
+```
 
-2023-4-13 提供了一个新的.config文件，具体原因见[附录](#附录)
-
-2023-4-22 更新文档要求[报告内容](#报告的内容)
-
-2023-4-23 修复了lab测试的一些错误(见[test_fix.patch](./test_fix.patch))，与大多数同学有关的是`test_c_style_list`。这个patch可以在你当前的commit上直接覆盖，方法和lab4.patch一样。
+2023-5-11 test_malloc()增加测试点；添加对提级申请的说明；对齐PDF文件。
 
 2023-5-9 panic如何找位置；添加一个对公式的说明。
 
-2023-5-11 test_malloc()增加测试点；添加对提级申请的说明；对齐PDF文件。
+2023-4-23 修复了lab测试的一些错误(见[test_fix.patch](./test_fix.patch))，与大多数同学有关的是`test_c_style_list`。这个patch可以在你当前的commit上直接覆盖，方法和lab4.patch一样。
+
+2023-4-22 更新文档要求[报告内容](#报告的内容)
+
+2023-4-13 提供了一个新的.config文件，具体原因见[附录](#附录)
+
+2023-4-11 修复了一个编译错误，**重新更新**了lab4.patch
+
+
 
 ## 目录
 1. [分数](#分数)：评分的标准
@@ -919,7 +933,7 @@ TLSF提到Rust 的allocator接口，这里接口和之前类似，但是实现�
 
 这里你需要实现的部分是取到块后，将块移除`addr_tree`的操作以及切割块多余部分的操作。
 
-如果你的实现正确，你应该能通过`test_release_page_range`
+如果你的实现正确，你应该能通过`test_reserve_page_range`
 
 #### `move_page_back`
 
