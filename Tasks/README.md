@@ -53,6 +53,24 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
      - linux
      - rust-for-linux
 
+3. 任务3：在RFL下重写gpio driver
+   - 时间：4周
+   - 描述：目前RFL社区已经提供了gpio的基本wrappers，如果我们可以进一步改写gpio相关的drivers，对于RFL能力的测试评估和我们内核将其进一步改造为实时gpio driver有很大的意义；
+   - 要求：
+     - 将drivers/gpio/gpiolib.c改写为rust版本
+     - 需要在一个树莓派上成功运行这个驱动
+     - 如果遇到没有被包裹的kernel API，需要完成对这个API的包裹
+     - 评估这个driver在rust和C下的性能差异
+     - 将这个driver提交到RFL内核社区
+   - 提示：
+     - 可以首先运行C版本的gpiolib.c，然后输出数据结构关系和函数调用关系文档，具体格式参考https://www.cnblogs.com/LoyenWang/p/11397084.html
+   - 导师：李弘宇 微信：13935084378
+   - 技术栈
+     - rust
+     - C
+     - linux
+     - rust-for-linux
+
 ## lab侧
 
 1. 任务1：让网站支持通过HTTPS传输
