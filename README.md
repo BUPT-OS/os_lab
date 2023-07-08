@@ -423,7 +423,7 @@ qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_r
 
 ## lab内容: 在内核中打印自己的信息
 
-为了验证大家成功运行并编译内核，需要在内核启动时打印一个特定的字符串加自己的学号，修改位于`kernel/rros/init.rs`中的第252行，打印的内容为`Hello world from rros! I'm 2020xxxxxx`，其中2020xxxxxx替换为自己的学号。如果你的实现正确，运行`qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 | grep "Hello world from rros! I'm 2022xxxxxx"`，就可以看到如下结果：
+为了验证大家成功运行并编译内核，需要在内核启动时打印一个特定的字符串加自己的用户名（用户名如果是选了操作系统实践课的同学就是学号，如果是参与我们实验室考核的同学就是手机号），修改位于`kernel/rros/init.rs`中的第252行，打印的内容为`Hello world from rros! I'm 2020xxxxxx`，其中2020xxxxxx替换为自己的学号。如果你的实现正确，运行`qemu-system-aarch64 -nographic  -kernel arch/arm64/boot/Image -initrd ../arm64_ramdisk/rootfs.cpio.gz -machine type=virt -cpu cortex-a57 -append "rdinit=/linuxrc console=ttyAMA0" -device virtio-scsi-device -smp 1 -m 4096 | grep "Hello world from rros! I'm 2022xxxxxx"`，就可以看到如下结果：
 
 ![](https://raw.githubusercontent.com/Richardhongyu/pic/main/20230223143740.png)
 
