@@ -34,7 +34,7 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
      - linux
      - rust-for-linux
 
-2. 任务2：测量RFL社区driver的性能（学术向）
+2. 任务2：测量RFL社区driver的性能（学术向）[已被选，2023/7/22]
    - 时间：2周
    - 描述：目前RFL社区用Rust重写了Linux社区的很多driver，如果能够系统地测量这些driver的性能，比如说网络设备的latency，磁盘设备的读写性能，对我们进一步用rust开发driver有很大的意义。
    - 要求：
@@ -53,7 +53,7 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
      - linux
      - rust-for-linux
 
-3. 任务3：在RFL下重写gpio driver
+3. 任务3：在RFL下重写gpio driver[已被选，2023/7/23]
    - 时间：4周
    - 描述：目前RFL社区已经提供了gpio的基本wrappers，如果我们可以进一步改写gpio相关的drivers，对于RFL能力的测试评估和我们内核将其进一步改造为实时gpio driver有很大的意义；
    - 要求：
