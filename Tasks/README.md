@@ -71,6 +71,44 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
      - linux
      - rust-for-linux
 
+4. 任务4：在树莓派上debug rros
+   - 时间：2周
+   - 描述：在qemu里面运行rros时，我们可以用gdb进行调试，在树莓派上运行rros时，我们也可以利用一个上位机进行调试，相比于使用qemu+gdb，我们可以获得更多的信息；
+   - 要求：
+     - 根据文档，在树莓派上成功运行rros
+     - 在自己的主机上配置gdb，然后使用uart2usb模块成功连接电脑，观察内核的线程信息
+     - 成功利用上位机debug
+     - 探索qemu和上位机debug信息不同的原因
+   - 提示：
+     - 选择这个任务的同学首先找导师要交叉编译Linux内核然后移植到树莓派上的文档
+     - 可以首先在树莓派上运行正常的Linux内核跑通整个流程
+     - 校内的同学，如果缺少树莓派/uart2usb模块，可以找导师咨询
+   - 导师：李弘宇 微信：13935084378
+   - 技术栈
+     - rust
+     - C
+     - linux
+     - rust-for-linux
+
+5. 任务5：采用shim层适配freertos接口和libevl的接口
+   - 时间：6周
+   - 描述：在xenomai 3.x时，xenomai通过shim层实现了对freertos系统库接口的兼容，进而支持运行freertos的实时应用程序，而到evl（xenomai4）后，社区目前还没有类似的机制兼容过去的程序，本任务就是要对接上游社区，；
+   - 要求：
+     - 和上游社区沟通，明确libevl和freertos对接的需求；
+     - 适配freertos和libevl的接口：
+       - 技术方案1：将xenomai 3.x的shim代码程序迁移到libevl中
+       - 技术方案2：重写shim层兼容freertos的接口
+     - 将shim推进libevl主线
+     - bonus：目前libevl有rust的wrapping层，可以在wrapping层中加入对shim层的wrapping
+   - 导师：李弘宇 微信：13935084378
+   - 技术栈
+     - rust
+     - C
+     - linux
+     - freertos
+
+6. 任务6：
+
 ## lab侧
 
 1. 任务1：让网站支持通过HTTPS传输
