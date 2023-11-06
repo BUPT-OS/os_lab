@@ -16,7 +16,7 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
 
 ## RROS侧
 
-1. 任务1：补全实时内核中时钟子系统的部分Syscall[已被选，2023/7/2]
+1. 任务1：补全实时内核中时钟子系统的部分Syscall
    - 时间：3周
    - 描述：目前实时内核的时钟子系统还没有给用户态用的syscall接口，只能在内核态调用实时接口，而我们编写实时程序一般需要在用户态，所以现在需要在用户态使用系统调用导出实时接口
    - 要求：
@@ -92,7 +92,7 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
 
 5. 任务5：采用shim层适配freertos接口和libevl的接口
    - 时间：6周
-   - 描述：在xenomai 3.x时，xenomai通过shim层实现了对freertos系统库接口的兼容，进而支持运行freertos的实时应用程序，而到evl（xenomai4）后，社区目前还没有类似的机制兼容过去的程序，本任务就是要对接上游社区，；
+   - 描述：在xenomai 3.x时，xenomai通过shim层实现了对freertos系统库接口的兼容，进而支持运行freertos的实时应用程序，而到evl（xenomai4）后，社区目前还没有类似的机制兼容过去的程序，经过前期沟通，社区maintainer有增加shim层的意愿，本任务就是要继续对接上游社区，增加这些功能；
    - 要求：
      - 和上游社区沟通，明确libevl和freertos对接的需求；
      - 适配freertos和libevl的接口：
@@ -107,7 +107,19 @@ RROS目前大概任务分类和举例如下，如果大家对改进内核和Lab�
      - linux
      - freertos
 
-6. 任务6：
+6. 任务6：补全rros在reboot阶段的逻辑
+    - 时间：2周
+    - 描述：目前rros如果采用reboot的命令重启，会陷入卡死状态，需要补全rros在reboot阶段的逻辑
+    - 要求：
+      - 首先明确Linux在reboot阶段经历了哪些函数调用，然后考察在rros中是否缺乏他们，如果缺乏，补全这些函数调用
+      - tips:
+        - 可以利用qeme/上位机进行debug，观察rros在reboot阶段被卡死的原因
+        - 可以参考evl和reboot相关的代码，对比实现rros
+    - 导师：李弘宇 微信：13935084378
+    - 技术栈
+      - rust
+      - C
+      - linux
 
 ## lab侧
 
